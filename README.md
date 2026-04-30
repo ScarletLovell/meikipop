@@ -1,5 +1,21 @@
 # meikipop - universal japanese ocr popup dictionary
 
+### Original Project
+https://github.com/rtr46/meikipop
+
+### Why a fork?
+This is my personal fork I use on my computers. It adds features such as:
+- Changes:
+  - *Added Setting*: **'Keep Popup While Keybind Held'**
+    - A setting to keep popup open, while holding keybind, allowing free moving mouse, and better accessibility.
+  - **'Show Furigana Popup'**
+    - A simple popup to show furigana above a word you are hovering over.
+    - Includes adding settings:
+      - 'Show Popup' - Show or Hide the main Popup window
+      - 'Show Furigana' - Show or Hide the Furigana window
+
+---
+
 instantly look up japanese words anywhere on your screen. meikipop uses optical character recognition (ocr) to read text from websites, games, scanned manga, or even hard-coded video subtitles, giving you effortless dictionary lookups with the press of a key (or even without)!
 
 https://github.com/user-attachments/assets/a1834197-3059-438c-a2dc-716e8ec9078f
