@@ -30,6 +30,7 @@ class Config:
     _SCHEMA = {
         'Settings': {
             'hotkey': 'shift',
+            'keep_popup_while_hotkey_held': False,
             'scan_region': 'region',
             'max_lookup_length': 25,
             'glens_low_bandwidth': False,
@@ -46,6 +47,8 @@ class Config:
             'font_size_definitions': 14,
             'font_size_header': 18,
             'compact_mode': True,
+            'show_furigana': True,
+            'show_popup': True, # note: cannot be set to false if `show_furigana` is false.
             'show_all_glosses': False,
             'show_deconjugation': False,
             'show_pos': False,

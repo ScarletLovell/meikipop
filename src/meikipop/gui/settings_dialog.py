@@ -77,6 +77,11 @@ class SettingsDialog(QDialog):
         self._set_expanding(self.hotkey_combo)
         core_layout.addRow("Hotkey:", self.hotkey_combo)
 
+        self.hold_hotkey_check = QCheckBox()
+        self.hold_hotkey_check.setChecked(config.keep_popup_while_hotkey_held)
+        self.hold_hotkey_check.setToolTip("Keep the popup visible as long as the hotkey is held down")
+        core_layout.addRow("Keep Popup While Hotkey Held:", self.hold_hotkey_check)
+
         self.ocr_provider_combo = QComboBox()
         self.ocr_provider_combo.addItems(self.ocr_processor.available_providers.keys())
         self.ocr_provider_combo.setCurrentText(config.ocr_provider)
@@ -183,6 +188,17 @@ class SettingsDialog(QDialog):
         vocab_group = QGroupBox("Vocab Entry Content")
         vocab_layout = QFormLayout()
         self.form_layouts.append(vocab_layout)
+
+        self.show_furigana_check = QCheckBox()
+        self.show_furigana_check.setChecked(config.show_furigana)
+        self.show_furigana_check.toggled.connect(self._update_furigana_state)
+        vocab_layout.addRow("Show Furigana:", self.show_furigana_check)
+
+        self.show_popup_check_label = QLabel("Show Popup:")
+        self.show_popup_check = QCheckBox()
+        self.show_popup_check.setChecked(config.show_popup)
+        self.show_popup_check.setToolTip("Cannot be disabled if Show Furigana is off")
+        vocab_layout.addRow(self.show_popup_check_label, self.show_popup_check)
 
         self.show_glosses_check = QCheckBox()
         self.show_glosses_check.setChecked(config.show_all_glosses)
@@ -334,6 +350,7 @@ class SettingsDialog(QDialog):
         self._update_auto_scan_state(self.auto_scan_check.isChecked())
         self._update_glens_state(self.ocr_provider_combo.currentText())
         self._update_kanji_options_state(self.show_kanji_check.isChecked())
+        self._update_furigana_state(self.show_furigana_check.isChecked())
 
     def _set_expanding(self, widget):
         """Helper to let a widget expand horizontally"""
@@ -386,6 +403,13 @@ class SettingsDialog(QDialog):
         self.show_components_check.setEnabled(is_checked)
         self.lookup.clear_cache()
 
+    def _update_furigana_state(self, is_checked):
+        """When furigana is off, show_popup cannot be disabled."""
+        if not is_checked:
+            self.show_popup_check.setChecked(True)
+        self.show_popup_check.setEnabled(is_checked)
+        self.show_popup_check_label.setEnabled(is_checked)
+
     def _mark_as_custom(self):
         if self.theme_combo.currentText() != "Custom":
             self.theme_combo.setCurrentText("Custom")
@@ -421,6 +445,7 @@ class SettingsDialog(QDialog):
 
         # Update all other config values
         config.hotkey = self.hotkey_combo.currentText()
+        config.keep_popup_while_hotkey_held = self.hold_hotkey_check.isChecked()
         config.glens_low_bandwidth = self.glens_compression_check.isChecked()
         config.max_lookup_length = self.max_lookup_spin.value()
         config.auto_scan_mode = self.auto_scan_check.isChecked()
@@ -431,6 +456,8 @@ class SettingsDialog(QDialog):
         if IS_WINDOWS:
             config.magpie_compatibility = self.magpie_check.isChecked()
         config.compact_mode = self.compact_check.isChecked()
+        config.show_furigana = self.show_furigana_check.isChecked()
+        config.show_popup = self.show_popup_check.isChecked()
         config.show_all_glosses = self.show_glosses_check.isChecked()
         config.show_deconjugation = self.show_deconj_check.isChecked()
         config.show_pos = self.show_pos_check.isChecked()
