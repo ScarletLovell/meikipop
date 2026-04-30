@@ -43,10 +43,11 @@ class KanjiEntry:
 
 
 class Lookup(threading.Thread):
-    def __init__(self, shared_state, popup_window):
+    def __init__(self, shared_state, popup_window, popup_window_furigana):
         super().__init__(daemon=True, name="Lookup")
         self.shared_state = shared_state
         self.popup_window = popup_window
+        self.popup_window_furigana = popup_window_furigana
         self.last_hit_result = None
 
         self.dictionary = Dictionary()
@@ -74,7 +75,12 @@ class Lookup(threading.Thread):
                 self.last_hit_result = hit_result
 
                 lookup_result = self.lookup(self.last_hit_result) if self.last_hit_result else None
-                self.popup_window.set_latest_data(lookup_result)
+                if config.show_furigana:
+                    # get furigana results for the first entry if it exists, otherwise pass empty list
+                    entry_zero = lookup_result[0] if lookup_result else None
+                    self.popup_window_furigana.set_furigana_data(entry_zero)
+                if config.show_popup or (not config.show_furigana and lookup_result):
+                    self.popup_window.set_latest_data(lookup_result)
             except:
                 logger.exception("An unexpected error occurred in the lookup loop. Continuing...")
         logger.debug("Lookup thread stopped.")

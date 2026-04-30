@@ -12,6 +12,7 @@ from meikipop.config.config import config, APP_NAME, APP_VERSION
 from meikipop.dictionary.lookup import Lookup
 from meikipop.gui.input import InputLoop
 from meikipop.gui.popup import Popup
+from meikipop.gui.popup_furigana import FuriganaPopup
 from meikipop.gui.tray import TrayIcon
 from meikipop.ocr.hit_scan import HitScanner
 from meikipop.ocr.ocr import OcrProcessor
@@ -56,9 +57,10 @@ def run_gui():
 
     input_loop = InputLoop(shared_state)
     popup_window = Popup(shared_state, input_loop)
+    popup_window_furigana = FuriganaPopup(input_loop)
 
     screen_manager = ScreenManager(shared_state, input_loop)  # trigger region selection
-    lookup = Lookup(shared_state, popup_window)  # load dictionary
+    lookup = Lookup(shared_state, popup_window, popup_window_furigana)  # load dictionary
 
     ocr_processor = OcrProcessor(shared_state, screen_manager)
     hit_scanner = HitScanner(shared_state, input_loop, screen_manager)
