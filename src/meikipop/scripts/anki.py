@@ -20,12 +20,13 @@ class AnkiConnectError(Exception):
 
 
 class AnkiConnect:
-    def __init__(self, url: str = DEFAULT_ANKI_CONNECT_URL):
+    def __init__(self, url: Optional[str] = None):
         # defaults to config first, then falls back to constructor argument
-        c_anki_ip = config.anki_connect_ip
-        c_anki_port = config.anki_connect_port
-        if c_anki_ip and c_anki_port:
-            url = f"http://{c_anki_ip}:{c_anki_port}"
+        if url is None:
+            c_anki_ip = config.anki_connect_ip
+            c_anki_port = config.anki_connect_port
+            if c_anki_ip and c_anki_port:
+                url = f"http://{c_anki_ip}:{c_anki_port}"
         self.url = url
 
     def _invoke(self, action: str, **params) -> Any:

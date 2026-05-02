@@ -336,6 +336,7 @@ class SettingsDialog(QDialog):
         self.tab_anki = QWidget()
         self.tab_anki_layout = QVBoxLayout(self.tab_anki)
 
+        # --- Group 1: Anki Settings ---
         anki_group = QGroupBox("Anki Integration")
         anki_layout = QFormLayout()
         self.form_layouts.append(anki_layout)
@@ -372,6 +373,22 @@ class SettingsDialog(QDialog):
         self.save_anki_hotkey_combo.setCurrentText(config.anki_save_hotkey)
         self._set_expanding(self.save_anki_hotkey_combo)
         anki_layout.addRow("Save to Anki Hotkey:", self.save_anki_hotkey_combo)
+
+        # --- Group 2: Anki Tests ---
+        anki_test_group = QGroupBox("Anki Tests")
+        anki_test_layout = QFormLayout()
+
+        self.anki_test_connection_btn = QPushButton("Test AnkiConnect Connection")
+        self.anki_test_connection_btn.clicked.connect(self.test_anki_connection)
+        anki_test_layout.addRow(self.anki_test_connection_btn)
+
+        self.anki_working_label = QLabel("Not Tested Yet")
+        self.anki_working_label.setWordWrap(True)
+        self.anki_working_label.setStyleSheet("color: gray;")
+        anki_test_layout.addRow(self.anki_working_label)
+
+        anki_test_group.setLayout(anki_test_layout)
+        anki_layout.addRow(anki_test_group)
 
         anki_group.setLayout(anki_layout)
         self.tab_anki_layout.addWidget(anki_group)
@@ -493,6 +510,50 @@ class SettingsDialog(QDialog):
             setattr(config, key, color.name())
             self._update_color_buttons()
             self._mark_as_custom()
+        
+    def test_anki_connection(self):
+        from meikipop.scripts.anki import AnkiConnect, AnkiConnectError
+
+        anki_ip = self.anki_ip_input.text()
+        if not anki_ip.startswith("http://") and not anki_ip.startswith("https://"):
+            anki_ip = f"http://{anki_ip}"
+        anki_port = self.anki_port_input.value()
+        if anki_port < 1 or anki_port > 65535:
+            self.anki_working_label.setText("Connection Failed: Invalid port number")
+            self.anki_working_label.setStyleSheet("color: red;")
+            return
+        anki_connect_url = f"{anki_ip}:{anki_port}"
+
+        try:
+            anki_connect = AnkiConnect(anki_connect_url)
+            models = anki_connect.get_model_names()
+            decks = anki_connect.get_deck_names()
+        except AnkiConnectError as e:
+            self.anki_working_label.setText(f"Connection Failed: {str(e)}")
+            self.anki_working_label.setStyleSheet("color: red;")
+            return
+
+        if len(models) == 0 or len(decks) == 0:
+            self.anki_working_label.setText("Connection Failed: No models or decks found")
+            self.anki_working_label.setStyleSheet("color: red;")
+            return
+
+        anki_model = self.default_anki_model_input.text()
+        anki_deck = self.default_anki_deck_input.text()
+
+        # test to see if we can access default model and deck
+        if anki_model and anki_model not in models:
+            self.anki_working_label.setText(f"Warning: Default model '{anki_model}' not found")
+            self.anki_working_label.setStyleSheet("color: orange;")
+            return
+
+        if anki_deck and anki_deck not in decks:
+            self.anki_working_label.setText(f"Warning: Default deck '{anki_deck}' not found")
+            self.anki_working_label.setStyleSheet("color: orange;")
+            return
+
+        self.anki_working_label.setText("Connection Successful!")
+        self.anki_working_label.setStyleSheet("color: green;")
 
     def save_and_accept(self):
         # Checkbox Checks

@@ -18,7 +18,7 @@ This is my personal fork I use on my computers. It adds many custom features to 
   - A custom integration into meikipop allowing you to save words to Anki directly using AnkiConnect
   - Includes adding settings:
     - 'Enable Anki Integration' - Enable or disable the Anki integration features
-    - 'AnkiConnect IP' - The IP address of your AnkiConnect instance (default:
+    - 'AnkiConnect IP' - The IP address of your AnkiConnect instance (default: 127.0.0.1)
     - 'AnkiConnect Port' - The port of your AnkiConnect instance (default: 8765)
     - 'Default Anki Model' - The default Anki model to use when saving a word
     - 'Default Anki Deck' - The default Anki deck to use when saving a word
