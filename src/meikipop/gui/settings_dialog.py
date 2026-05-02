@@ -77,6 +77,12 @@ class SettingsDialog(QDialog):
         self._set_expanding(self.hotkey_combo)
         core_layout.addRow("Hotkey:", self.hotkey_combo)
 
+        self.save_anki_hotkey_combo = QComboBox()
+        self.save_anki_hotkey_combo.addItems(['ctrl+s', 'ctrl+shift+s', 'alt+s', 'shift+s', 'ctrl+alt+s'])
+        self.save_anki_hotkey_combo.setCurrentText(config.anki_save_hotkey)
+        self._set_expanding(self.save_anki_hotkey_combo)
+        core_layout.addRow("Save to Anki Hotkey:", self.save_anki_hotkey_combo)
+
         self.hold_hotkey_check = QCheckBox()
         self.hold_hotkey_check.setChecked(config.keep_popup_while_hotkey_held)
         self.hold_hotkey_check.setToolTip("Keep the popup visible as long as the hotkey is held down")
@@ -438,6 +444,12 @@ class SettingsDialog(QDialog):
             self._mark_as_custom()
 
     def save_and_accept(self):
+        # Checkbox Checks
+        if not self.show_furigana_check.isChecked() and not self.show_popup_check.isChecked():
+            # scar: program can be in invalid state if both are disabled, 
+            # so we re-enable at-least one of them.
+            self.show_popup_check.setChecked(True)
+
         # Update OCR Provider
         selected_provider = self.ocr_provider_combo.currentText()
         if selected_provider != config.ocr_provider:
@@ -445,6 +457,7 @@ class SettingsDialog(QDialog):
 
         # Update all other config values
         config.hotkey = self.hotkey_combo.currentText()
+        config.anki_save_hotkey = self.save_anki_hotkey_combo.currentText()
         config.keep_popup_while_hotkey_held = self.hold_hotkey_check.isChecked()
         config.glens_low_bandwidth = self.glens_compression_check.isChecked()
         config.max_lookup_length = self.max_lookup_spin.value()

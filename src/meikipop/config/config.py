@@ -30,6 +30,7 @@ class Config:
     _SCHEMA = {
         'Settings': {
             'hotkey': 'shift',
+            'anki_save_hotkey': 'ctrl+shift+s',
             'keep_popup_while_hotkey_held': False,
             'scan_region': 'region',
             'max_lookup_length': 25,

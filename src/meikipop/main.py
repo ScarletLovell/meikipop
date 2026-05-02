@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QApplication
 from meikipop.utils.logger import setup_logging
 from meikipop.config.config import config, APP_NAME, APP_VERSION
 from meikipop.dictionary.lookup import Lookup
+from meikipop.gui.anki_save import AnkiSaveDialog
 from meikipop.gui.input import InputLoop
 from meikipop.gui.popup import Popup
 from meikipop.gui.popup_furigana import FuriganaPopup
@@ -65,6 +66,7 @@ def run_gui():
     ocr_processor = OcrProcessor(shared_state, screen_manager)
     hit_scanner = HitScanner(shared_state, input_loop, screen_manager)
     tray_icon = TrayIcon(screen_manager, ocr_processor, popup_window, input_loop, lookup)
+    anki_save_dialog = AnkiSaveDialog(popup_window, screen_manager)
 
     for t in [lookup, hit_scanner, ocr_processor, screen_manager, input_loop]:
         t.start()
