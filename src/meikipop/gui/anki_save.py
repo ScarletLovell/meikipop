@@ -26,11 +26,19 @@ _MEANING_KEYS = {'meaning', 'definition', 'gloss', 'translation', 'english'}
 _SCREEN_KEYS  = {'screenshot', 'image', 'picture', 'screen', 'context'}
 
 _FALLBACK_DECKS  = ["Default"]
-_FALLBACK_MODELS = ["Basic", "Basic (and reversed card)"]
+_FALLBACK_MODELS = ["Basic"]
 _FALLBACK_FIELDS: Dict[str, List[str]] = {
     "Basic": ["Front", "Back"],
     "Basic (and reversed card)": ["Front", "Back"],
 }
+
+
+def _with_config_default(default_value: Optional[str], fallback_values: List[str]) -> List[str]:
+    """Return combo items with config default first, preserving fallback values."""
+    items = list(fallback_values)
+    if default_value and default_value not in items:
+        items.insert(0, default_value)
+    return items
 
 
 def _first_gloss(entry: Optional[DictionaryEntry]) -> str:
@@ -105,6 +113,7 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _apply_stylesheet(self):
+        """Apply the stylesheet for the dialog and its child widgets."""
         self.setStyleSheet("""
             QDialog {
                 background-color: #1e1e2e;
@@ -215,6 +224,7 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _build_ui(self):
+        """Construct the static UI components and layout."""
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
@@ -228,12 +238,14 @@ class AnkiSaveDialog(QDialog):
         root.addWidget(self._build_footer())
 
     def _divider(self) -> QFrame:
+        """Return a horizontal divider line widget."""
         line = QFrame()
         line.setObjectName("divider")
         line.setFixedHeight(1)
         return line
 
     def _build_header(self) -> QWidget:
+        """Build the header section with title and deck selector."""
         w = QWidget()
         w.setStyleSheet("background-color: #181825; padding: 2px 0;")
         layout = QHBoxLayout(w)
@@ -245,14 +257,12 @@ class AnkiSaveDialog(QDialog):
         layout.addStretch()
 
         layout.addWidget(QLabel("Deck:"))
+        default_deck = getattr(config, "default_anki_deck", None)
         self._deck_combo = QComboBox()
-        self._deck_combo.addItems(_FALLBACK_DECKS)
-        c_deck_name = config.default_anki_deck
-        # set config default deck if available, otherwise keep fallback
-        if c_deck_name:
-            idx = self._deck_combo.findText(c_deck_name)
-            if idx >= 0:
-                self._deck_combo.setCurrentIndex(idx)
+        deck_items = _with_config_default(default_deck, _FALLBACK_DECKS)
+        self._deck_combo.addItems(deck_items)
+        if default_deck:
+            self._deck_combo.setCurrentText(default_deck)
         layout.addWidget(self._deck_combo)
 
         refresh_btn = QPushButton("⟳")
@@ -263,6 +273,7 @@ class AnkiSaveDialog(QDialog):
         return w
 
     def _build_card_type_row(self) -> QWidget:
+        """Build the row containing the card type (model) selector."""
         w = QWidget()
         layout = QHBoxLayout(w)
         layout.setContentsMargins(16, 10, 16, 10)
@@ -271,20 +282,19 @@ class AnkiSaveDialog(QDialog):
         lbl.setObjectName("section_label")
         layout.addWidget(lbl)
 
+        default_model = getattr(config, "default_anki_model", None)
         self._model_combo = QComboBox()
-        self._model_combo.addItems(_FALLBACK_MODELS)
+        model_items = _with_config_default(default_model, _FALLBACK_MODELS)
+        self._model_combo.addItems(model_items)
+        if default_model:
+            self._model_combo.setCurrentText(default_model)
         self._model_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        c_model_name = config.default_anki_model
-        # set config default model if available, otherwise keep fallback
-        if c_model_name:
-            idx = self._model_combo.findText(c_model_name)
-            if idx >= 0:
-                self._model_combo.setCurrentIndex(idx)
         self._model_combo.currentTextChanged.connect(self._on_model_changed)
         layout.addWidget(self._model_combo)
         return w
 
     def _build_content_section(self) -> QWidget:
+        """Build the main content section with screenshot panel and field inputs."""
         w = QWidget()
         layout = QHBoxLayout(w)
         layout.setContentsMargins(16, 12, 16, 12)
@@ -295,6 +305,7 @@ class AnkiSaveDialog(QDialog):
         return w
 
     def _build_screenshot_panel(self) -> QWidget:
+        """Build the panel containing screenshot preview and actions."""
         panel = QWidget()
         panel.setObjectName("screenshot_panel")
         panel.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
@@ -333,6 +344,7 @@ class AnkiSaveDialog(QDialog):
         return panel
 
     def _build_fields_panel(self) -> QWidget:
+        """Build the panel containing field input widgets."""
         container = QWidget()
         container.setObjectName("fields_panel")
         outer = QVBoxLayout(container)
@@ -359,6 +371,7 @@ class AnkiSaveDialog(QDialog):
         return container
 
     def _build_footer(self) -> QWidget:
+        """Build the footer with status label, cancel and apply buttons."""
         w = QWidget()
         w.setStyleSheet("background-color: #181825;")
         layout = QHBoxLayout(w)
@@ -389,6 +402,8 @@ class AnkiSaveDialog(QDialog):
             self._field_value_cache[name] = inp.toPlainText()
 
     def _rebuild_fields(self, field_names: List[str]):
+        """Rebuild the field input widgets based on the given list of field names, 
+        preserving existing values where possible."""
         self._snapshot_field_values()
 
         previous_screenshot_field = None
@@ -444,6 +459,7 @@ class AnkiSaveDialog(QDialog):
         self._update_apply_button_state()
 
     def _autofill(self, field_name: str, entry: Optional[DictionaryEntry | KanjiEntry]) -> str:
+        """Given a field name and dictionary entry, return an autofill value based on heuristics."""
         key = field_name.lower()
         if key in _WORD_KEYS:
             return entry.written_form if entry and isinstance(entry, DictionaryEntry) else (
@@ -476,10 +492,13 @@ class AnkiSaveDialog(QDialog):
         return ""
 
     def _current_entry(self) -> Optional[DictionaryEntry]:
+        """Return the current dictionary entry from the popup, if available."""
         data = self.popup_window.get_latest_data()
         return data[0] if data else None
 
     def _populate_from_lookup(self, force_overwrite: bool = False):
+        """Fill fields based on current dictionary entry and field name heuristics. 
+        If *force_overwrite* is False, existing field values will not be overwritten."""
         entry = self._current_entry()
         for name, inp in self._field_inputs.items():
             if not force_overwrite and inp.toPlainText().strip():
@@ -493,6 +512,7 @@ class AnkiSaveDialog(QDialog):
             self._load_pil_screenshot(self.screen_manager.last_screenshot)
 
     def _load_pil_screenshot(self, pil_image):
+        """Load a PIL Image as the current screenshot, saving to a temp file and updating preview."""
         try:
             import io
             buf = io.BytesIO()
@@ -514,6 +534,7 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _set_screenshot(self, path: str):
+        """Set the current screenshot to *path*, update preview, and select target field if applicable."""
         self._screenshot_path = path
         pixmap = QPixmap(path)
         if not pixmap.isNull():
@@ -528,6 +549,7 @@ class AnkiSaveDialog(QDialog):
             self._screenshot_preview.setText("Preview unavailable")
 
     def _on_screenshot_action_selected(self, index: int):
+        """Handle user selecting a screenshot action from the combo box."""
         if index <= 0:
             return
         if index == 1:
@@ -589,6 +611,7 @@ class AnkiSaveDialog(QDialog):
         QTimer.singleShot(200, do_capture)
 
     def _select_screenshot_file(self):
+        """Open file dialog to select an image, then set as screenshot if valid."""
         path, _ = QFileDialog.getOpenFileName(
             self, "Select Image", "",
             "Images (*.png *.jpg *.jpeg *.webp *.bmp *.gif)"
@@ -598,12 +621,17 @@ class AnkiSaveDialog(QDialog):
             self._set_screenshot(path)
 
     def _clear_screenshot(self):
+        """Clear the current screenshot from the preview and reset state, 
+        including deleting any managed temp file."""
         self._cleanup_temp_screenshot()
         self._screenshot_path = None
         self._screenshot_preview.setPixmap(QPixmap())
         self._screenshot_preview.setText("No image")
 
     def _cleanup_temp_screenshot(self):
+        """If we have a temp screenshot from a region capture, delete the file 
+        to avoid littering the user's disk. This should be called whenever we 
+        replace or clear the screenshot, and also when the dialog is closed."""
         if self._temp_screenshot and os.path.exists(self._temp_screenshot):
             try:
                 os.unlink(self._temp_screenshot)
@@ -616,6 +644,7 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _refresh_from_anki(self):
+        """Attempt to connect to Anki and fetch decks/models. Update combos and status message accordingly."""
         self._set_status("Connecting to Anki…")
         try:
             decks = self._anki.get_deck_names()
@@ -648,6 +677,11 @@ class AnkiSaveDialog(QDialog):
         self._update_apply_button_state()
 
     def _on_model_changed(self, model_name: str):
+        """When the user selects a different card type, rebuild the field inputs based on the new model's field names.
+        
+        Args:
+            model_name (str): The name of the selected model.
+        """
         try:
             fields = self._anki.get_model_field_names(model_name)
         except AnkiConnectError:
@@ -656,6 +690,7 @@ class AnkiSaveDialog(QDialog):
         self._update_apply_button_state()
 
     def _submit_to_anki(self):
+        """Gather current field values and send addNote request to AnkiConnect, then show success or error status."""
         deck = self._deck_combo.currentText()
         model = self._model_combo.currentText()
         self._snapshot_field_values()
@@ -691,6 +726,7 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _start_hotkey_listener(self):
+        """Start a global hotkey listener in a separate thread that emits _show_signal when triggered."""
         hotkey_str = getattr(config, "anki_save_hotkey", "ctrl+shift+s")
         pynput_hotkey = _hotkey_to_pynput(hotkey_str)
         try:
@@ -705,6 +741,8 @@ class AnkiSaveDialog(QDialog):
 
     def _on_hotkey_triggered(self):
         """Called on the main thread via signal."""
+        if not config.enable_anki_integration:
+            return
         if self.isVisible():
             self.hide()
             return
@@ -721,11 +759,13 @@ class AnkiSaveDialog(QDialog):
     # ──────────────────────────────────────────────
 
     def _set_status(self, msg: str, error: bool = False):
+        """Set the status message in the footer, optionally styling it as an error."""
         self._status_label.setText(msg)
         color = "#f38ba8" if error else "#a6adc8"
         self._status_label.setStyleSheet(f"color: {color}; font-size: 12px;")
 
     def _update_apply_button_state(self):
+        """Enable the Apply button only if required fields are filled and Anki is reachable."""
         if not hasattr(self, "_apply_btn"):
             return
         has_deck = bool(self._deck_combo.currentText().strip()) if hasattr(self, "_deck_combo") else False
@@ -741,6 +781,7 @@ class AnkiSaveDialog(QDialog):
         self._apply_btn.setEnabled(has_deck and has_model and has_fields and first_field_has_text)
 
     def closeEvent(self, a0):
+        """Override closeEvent to hide instead of close, so the dialog can be reused without re-instantiation."""
         if a0:
             a0.ignore()
         self.hide()

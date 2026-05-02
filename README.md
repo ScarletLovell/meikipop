@@ -1,10 +1,43 @@
 # meikipop - universal japanese ocr popup dictionary
 
+### Original Project
+https://github.com/rtr46/meikipop
+
+### Why a fork?
+This is my personal fork I use on my computers. It adds many custom features to Meikipop that I like using myself. I will try to keep this fork up to date with the original project, but I cannot guarantee that this project will be up to date with the original.
+
+### Changes:
+- *Added Setting*: **'Keep Popup While Keybind Held'**
+  - A setting to keep popup open, while holding keybind, allowing free moving mouse, and better accessibility.
+- **'Show Furigana Popup'**
+  - A simple popup to show furigana above a word you are hovering over.
+  - Includes adding settings:
+    - 'Show Popup' - Show or Hide the main Popup window
+    - 'Show Furigana' - Show or Hide the Furigana window
+- **Anki Integration**:
+  - A custom integration into meikipop allowing you to save words to Anki directly using AnkiConnect
+  - Includes adding settings:
+    - 'Enable Anki Integration' - Enable or disable the Anki integration features
+    - 'AnkiConnect IP' - The IP address of your AnkiConnect instance (default:
+    - 'AnkiConnect Port' - The port of your AnkiConnect instance (default: 8765)
+    - 'Default Anki Model' - The default Anki model to use when saving a word
+    - 'Default Anki Deck' - The default Anki deck to use when saving a word
+    - 'Anki Save Hotkey' - The hotkey to save the current word to Anki
+
+### Using Anki Integration:
+1. Enable Anki integration in the settings.
+2. Make sure you have AnkiConnect installed and running in Anki.
+3. Hover over a word, press your default Meikipop HotKey to open popup
+4. Press your Anki Save HotKey to save the word to Anki. A dialog will appear allowing you to customize the fields and screenshot before saving.
+
+###### *Note*: You are able to set the default Anki model and deck in settings, but you can also change them in the Anki Save dialog before saving a word.
+    
+
+---
+
 instantly look up japanese words anywhere on your screen. meikipop uses optical character recognition (ocr) to read text from websites, games, scanned manga, or even hard-coded video subtitles, giving you effortless dictionary lookups with the press of a key (or even without)!
 
 https://github.com/user-attachments/assets/a1834197-3059-438c-a2dc-716e8ec9078f
-
-
 
 ## features
 

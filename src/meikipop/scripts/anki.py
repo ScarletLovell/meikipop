@@ -15,20 +15,21 @@ ANKI_CONNECT_VERSION = 6
 
 
 class AnkiConnectError(Exception):
+    """Custom exception for AnkiConnect-related errors."""
     pass
 
 
 class AnkiConnect:
     def __init__(self, url: str = DEFAULT_ANKI_CONNECT_URL):
+        # defaults to config first, then falls back to constructor argument
         c_anki_ip = config.anki_connect_ip
         c_anki_port = config.anki_connect_port
         if c_anki_ip and c_anki_port:
             url = f"http://{c_anki_ip}:{c_anki_port}"
-        else:
-            url = DEFAULT_ANKI_CONNECT_URL
         self.url = url
 
     def _invoke(self, action: str, **params) -> Any:
+        """Invoke an action on AnkiConnect with the given parameters."""
         payload = {"action": action, "version": ANKI_CONNECT_VERSION, "params": params}
         try:
             response = requests.post(self.url, json=payload, timeout=5)
@@ -46,6 +47,7 @@ class AnkiConnect:
         return result["result"]
 
     def test_connection(self) -> bool:
+        """Test if AnkiConnect is reachable and responding."""
         try:
             self._invoke("version")
             return True
@@ -53,12 +55,15 @@ class AnkiConnect:
             return False
 
     def get_deck_names(self) -> List[str]:
+        """Get a list of all deck names in the Anki collection."""
         return sorted(self._invoke("deckNames"))
 
     def get_model_names(self) -> List[str]:
+        """Get a list of all model names in the Anki collection."""
         return sorted(self._invoke("modelNames"))
 
     def get_model_field_names(self, model_name: str) -> List[str]:
+        """Get a list of field names for a given model."""
         return self._invoke("modelFieldNames", modelName=model_name)
 
     def store_media_file(self, filename: str, file_path: str) -> str:
@@ -84,8 +89,6 @@ class AnkiConnect:
         If screenshot_path and screenshot_field are provided, the image is stored
         in Anki's media collection and embedded in the specified field.
         """
-
-        # scar: defaults to config, otherwise defaults to vars
         note: Dict[str, Any] = {
             "deckName": deck_name,
             "modelName": model_name,
