@@ -1,7 +1,7 @@
 # meikipop/gui/settings_dialog.py
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QIcon, QFontDatabase
-from PyQt6.QtWidgets import (QWidget, QDialog, QFormLayout, QComboBox,
+from PyQt6.QtWidgets import (QLineEdit, QWidget, QDialog, QFormLayout, QComboBox,
                              QSpinBox, QCheckBox, QPushButton, QColorDialog, QVBoxLayout, QHBoxLayout,
                              QGroupBox, QDialogButtonBox, QLabel, QSlider, QDoubleSpinBox,
                              QTabWidget, QSizePolicy, QFontComboBox)
@@ -76,12 +76,6 @@ class SettingsDialog(QDialog):
         self.hotkey_combo.setCurrentText(config.hotkey)
         self._set_expanding(self.hotkey_combo)
         core_layout.addRow("Hotkey:", self.hotkey_combo)
-
-        self.save_anki_hotkey_combo = QComboBox()
-        self.save_anki_hotkey_combo.addItems(['ctrl+s', 'ctrl+shift+s', 'alt+s', 'shift+s', 'ctrl+alt+s'])
-        self.save_anki_hotkey_combo.setCurrentText(config.anki_save_hotkey)
-        self._set_expanding(self.save_anki_hotkey_combo)
-        core_layout.addRow("Save to Anki Hotkey:", self.save_anki_hotkey_combo)
 
         self.hold_hotkey_check = QCheckBox()
         self.hold_hotkey_check.setChecked(config.keep_popup_while_hotkey_held)
@@ -336,10 +330,58 @@ class SettingsDialog(QDialog):
         self.tab_appearance_layout.addWidget(color_group)
         self.tab_appearance_layout.addStretch()
 
+        # ==========================================
+        # TAB 4: Anki Integration
+        # ==========================================
+        self.tab_anki = QWidget()
+        self.tab_anki_layout = QVBoxLayout(self.tab_anki)
+
+        anki_group = QGroupBox("Anki Integration")
+        anki_layout = QFormLayout()
+        self.form_layouts.append(anki_layout)
+
+        self.anki_requirements_label = QLabel("Requires AnkiConnect for Anki integration.")
+        self.anki_requirements_label.setStyleSheet("color: gray;")
+        self.anki_requirements_label.setWordWrap(True)
+        anki_layout.addRow(self.anki_requirements_label)
+
+        self.enable_anki_integration_check = QCheckBox()
+        self.enable_anki_integration_check.setChecked(config.enable_anki_integration)
+        self.enable_anki_integration_check.toggled.connect(self._update_anki_state)
+        anki_layout.addRow("Enable Integration:", self.enable_anki_integration_check)
+
+        self.default_anki_model_input = QLineEdit(config.default_anki_model)
+        self._set_expanding(self.default_anki_model_input)
+        anki_layout.addRow("Default Model:", self.default_anki_model_input)
+
+        self.default_anki_deck_input = QLineEdit(config.default_anki_deck)
+        self._set_expanding(self.default_anki_deck_input)
+        anki_layout.addRow("Default Deck:", self.default_anki_deck_input)
+
+        self.anki_ip_input = QLineEdit(config.anki_connect_ip)
+        self._set_expanding(self.anki_ip_input)
+        anki_layout.addRow("AnkiConnect IP:", self.anki_ip_input)
+
+        self.anki_port_input = QSpinBox()
+        self.anki_port_input.setRange(1, 65535)
+        self.anki_port_input.setValue(config.anki_connect_port)
+        anki_layout.addRow("AnkiConnect Port:", self.anki_port_input)
+
+        self.save_anki_hotkey_combo = QComboBox()
+        self.save_anki_hotkey_combo.addItems(['ctrl+s', 'ctrl+shift+s', 'alt+s', 'shift+s', 'ctrl+alt+s'])
+        self.save_anki_hotkey_combo.setCurrentText(config.anki_save_hotkey)
+        self._set_expanding(self.save_anki_hotkey_combo)
+        anki_layout.addRow("Save to Anki Hotkey:", self.save_anki_hotkey_combo)
+
+        anki_group.setLayout(anki_layout)
+        self.tab_anki_layout.addWidget(anki_group)
+        self.tab_anki_layout.addStretch()
+
         # Add tabs to main layout
         self.tabs.addTab(self.tab_general, "General")
         self.tabs.addTab(self.tab_content, "Popup Content")
         self.tabs.addTab(self.tab_appearance, "Popup Appearance")
+        self.tabs.addTab(self.tab_anki, "Anki Integration")
         main_layout.addWidget(self.tabs)
 
         # Buttons
@@ -355,6 +397,7 @@ class SettingsDialog(QDialog):
         self._update_color_buttons()
         self._update_auto_scan_state(self.auto_scan_check.isChecked())
         self._update_glens_state(self.ocr_provider_combo.currentText())
+        self._update_anki_state(self.enable_anki_integration_check.isChecked())
         self._update_kanji_options_state(self.show_kanji_check.isChecked())
         self._update_furigana_state(self.show_furigana_check.isChecked())
 
@@ -402,6 +445,14 @@ class SettingsDialog(QDialog):
         is_glens = "Google Lens (remote)" in current_provider
         self.glens_compression_check.setEnabled(is_glens)
         self.glens_compression_check_label.setEnabled(is_glens)
+
+    def _update_anki_state(self, is_checked):
+        """Grays out Anki options if integration is disabled."""
+        self.default_anki_model_input.setEnabled(is_checked)
+        self.default_anki_deck_input.setEnabled(is_checked)
+        self.anki_ip_input.setEnabled(is_checked)
+        self.anki_port_input.setEnabled(is_checked)
+        self.save_anki_hotkey_combo.setEnabled(is_checked)
 
     def _update_kanji_options_state(self, is_checked):
         """Enables/Disables kanji specific sub-options."""
@@ -457,6 +508,11 @@ class SettingsDialog(QDialog):
 
         # Update all other config values
         config.hotkey = self.hotkey_combo.currentText()
+        config.enable_anki_integration = self.enable_anki_integration_check.isChecked()
+        config.default_anki_model = self.default_anki_model_input.text()
+        config.default_anki_deck = self.default_anki_deck_input.text()
+        config.anki_connect_ip = self.anki_ip_input.text()
+        config.anki_connect_port = self.anki_port_input.value()
         config.anki_save_hotkey = self.save_anki_hotkey_combo.currentText()
         config.keep_popup_while_hotkey_held = self.hold_hotkey_check.isChecked()
         config.glens_low_bandwidth = self.glens_compression_check.isChecked()

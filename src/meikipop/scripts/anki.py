@@ -4,11 +4,13 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from meikipop.config.config import config
+
 import requests
 
 logger = logging.getLogger(__name__)
 
-ANKI_CONNECT_URL = "http://127.0.0.1:8765"
+DEFAULT_ANKI_CONNECT_URL = "http://127.0.0.1:8765"
 ANKI_CONNECT_VERSION = 6
 
 
@@ -17,7 +19,13 @@ class AnkiConnectError(Exception):
 
 
 class AnkiConnect:
-    def __init__(self, url: str = ANKI_CONNECT_URL):
+    def __init__(self, url: str = DEFAULT_ANKI_CONNECT_URL):
+        c_anki_ip = config.anki_connect_ip
+        c_anki_port = config.anki_connect_port
+        if c_anki_ip and c_anki_port:
+            url = f"http://{c_anki_ip}:{c_anki_port}"
+        else:
+            url = DEFAULT_ANKI_CONNECT_URL
         self.url = url
 
     def _invoke(self, action: str, **params) -> Any:
@@ -76,6 +84,8 @@ class AnkiConnect:
         If screenshot_path and screenshot_field are provided, the image is stored
         in Anki's media collection and embedded in the specified field.
         """
+
+        # scar: defaults to config, otherwise defaults to vars
         note: Dict[str, Any] = {
             "deckName": deck_name,
             "modelName": model_name,

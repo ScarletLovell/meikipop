@@ -247,6 +247,12 @@ class AnkiSaveDialog(QDialog):
         layout.addWidget(QLabel("Deck:"))
         self._deck_combo = QComboBox()
         self._deck_combo.addItems(_FALLBACK_DECKS)
+        c_deck_name = config.default_anki_deck
+        # set config default deck if available, otherwise keep fallback
+        if c_deck_name:
+            idx = self._deck_combo.findText(c_deck_name)
+            if idx >= 0:
+                self._deck_combo.setCurrentIndex(idx)
         layout.addWidget(self._deck_combo)
 
         refresh_btn = QPushButton("⟳")
@@ -268,6 +274,12 @@ class AnkiSaveDialog(QDialog):
         self._model_combo = QComboBox()
         self._model_combo.addItems(_FALLBACK_MODELS)
         self._model_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        c_model_name = config.default_anki_model
+        # set config default model if available, otherwise keep fallback
+        if c_model_name:
+            idx = self._model_combo.findText(c_model_name)
+            if idx >= 0:
+                self._model_combo.setCurrentIndex(idx)
         self._model_combo.currentTextChanged.connect(self._on_model_changed)
         layout.addWidget(self._model_combo)
         return w

@@ -30,7 +30,6 @@ class Config:
     _SCHEMA = {
         'Settings': {
             'hotkey': 'shift',
-            'anki_save_hotkey': 'ctrl+shift+s',
             'keep_popup_while_hotkey_held': False,
             'scan_region': 'region',
             'max_lookup_length': 25,
@@ -64,6 +63,14 @@ class Config:
             'color_highlight_reading': '#90EE90',
             'background_opacity': 245,
             'popup_position_mode': 'visual_novel_mode'
+        },
+        'Anki': {
+            'enable_anki_integration': True,
+            'default_anki_model': 'Basic',
+            'default_anki_deck': 'Default',
+            'anki_connect_ip': '127.0.0.1',
+            'anki_connect_port': 8765,
+            'anki_save_hotkey': 'ctrl+shift+s',
         }
     }
 
